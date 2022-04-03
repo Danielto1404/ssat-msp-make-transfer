@@ -70,13 +70,13 @@ def eval():
 
         non_makeup_down = nearest_64(non_makeup)
         n, c, h, w = non_makeup_down.shape
-        non_makeup_down_warp = bmm(non_makeup_down.reshape(n, c, h * w), mapY)  # n*HW*1
+        non_makeup_down_warp = bmm(non_makeup_down.reshape(n, c, h * w), mapY)  # n * H * W * 1
         non_makeup_down_warp = non_makeup_down_warp.reshape(n, c, h, w)
         non_makeup_warp = nearest_256(non_makeup_down_warp)
 
         makeup_down = nearest_64(makeup)
         n, c, h, w = makeup_down.shape
-        makeup_down_warp = bmm(makeup_down.reshape(n, c, h * w), mapX)  # n*HW*1
+        makeup_down_warp = bmm(makeup_down.reshape(n, c, h * w), mapX)  # n* H * W*1
         makeup_down_warp = makeup_down_warp.reshape(n, c, h, w)
         makeup_warp = nearest_256(makeup_down_warp)
 

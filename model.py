@@ -1,9 +1,10 @@
-import network
-from network import init_weights
 import mindspore as ms
 import mindspore.nn as nn
 import mindspore.ops as ops
 from mindspore import context
+
+import network
+from network import init_weights
 
 
 ####################################################################
@@ -188,13 +189,16 @@ class WithLossCell(nn.Cell):
     Args:
         network (Cell): The target network to wrap.
     """
+
     def __init__(self, network):
         super(WithLossCell, self).__init__(auto_prefix=False)
         self.network = network
 
     def construct(self, non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse):
-        lg,z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY = self.network.construct(non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse)
+        lg, z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY = self.network.construct(
+            non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse)
         return lg
+
 
 class TrainOneStepG(nn.Cell):
     def __init__(self, G, optimizer, sens=1.0):
@@ -219,15 +223,17 @@ class TrainOneStepG(nn.Cell):
 
     def construct(self, non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse):
         weights = self.weights
-        lg,z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY=self.G.construct(non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse)
-        #print(lg)
+        lg, z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY = self.G.construct(
+            non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse)
+        # print(lg)
         sens = ops.Fill()(ops.DType()(lg), ops.Shape()(lg), self.sens)
-        grads_g = self.grad(self.net, weights)(non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse, sens)
+        grads_g = self.grad(self.net, weights)(non_makeup, makeup, transfer, removal, non_makeup_parse, makeup_parse,
+                                               sens)
         if self.reducer_flag:
             # apply grad reducer on grads
             grads_g = self.grad_reducer(grads_g)
         self.optimizer(grads_g)
-        return lg,z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY
+        return lg, z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY
 
 
 class TrainOneStepD(nn.Cell):

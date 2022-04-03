@@ -1,12 +1,9 @@
-import mindspore.nn as nn
-import mindspore.ops as ops
-from mindspore import Tensor
+import mindspore
 import mindspore.common.dtype as mstype
-
 import mindspore.nn as nn
 import mindspore.ops as ops
 import numpy as np
-import mindspore
+from mindspore import Tensor
 
 
 ####################################################################
@@ -237,7 +234,6 @@ class SAATGLoss(nn.Cell):
         loss_G = loss_G_GAN + loss_G_rec + loss_G_cycle + loss_G_semantic + loss_G_SPL
 
         return loss_G, z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY
-
 
 
 if __name__ == '__main__':

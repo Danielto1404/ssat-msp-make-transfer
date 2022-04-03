@@ -212,7 +212,7 @@ class SymmetryAttention(nn.Cell):
 
         energy_ba_T = bmm(transpose(fa, input_perm), fb) * alpha
         corr_ba_T = self.softmax(energy_ba_T)  # n*HW*C @ n*C*HW -> n*HW*HW
-        #corr_ba_T = transpose(corr_ab_T, (0, 2, 1))
+        # corr_ba_T = transpose(corr_ab_T, (0, 2, 1))
         a_warp = bmm(a_raw.reshape(n, raw_c, h * w), corr_ba_T)  # n*HW*1
         a_warp = a_warp.reshape(n, raw_c, h, w)
         return corr_ab_T, corr_ba_T, a_warp, b_warp
@@ -239,6 +239,7 @@ class Transformer(nn.Cell):
         attention_x, attention_y, x_m_warp, y_m_warp = self.atte.construct(x_f, y_f, x_m, y_m)
         return attention_x, attention_y, x_m_warp, y_m_warp
 
+
 ####################################################################
 # -------------------------- Decoder --------------------------
 ####################################################################
@@ -251,24 +252,23 @@ class Decoder(nn.Cell):
         self.SPADE2 = SPADEResnetBlock(ngf * 4, ngf * 2, ngf * 4)
         self.SPADE3 = SPADEResnetBlock(ngf * 2, ngf * 1, ngf * 4)
         self.img_conv = ConvNormReLU(ngf * 1, output_dim, kernel_size=7, stride=1, padding=3, norm_mode='None',
-                                    use_relu=False)
+                                     use_relu=False)
         self.tanh = nn.Tanh()
 
     def construct(self, x, y):
         # content=x[-1]
         # makeup=y
-        _,c,h,w=x[-1].shape
-        up_1 = ops.ResizeBilinear(size=(h*2,w*2))
+        _, c, h, w = x[-1].shape
+        up_1 = ops.ResizeBilinear(size=(h * 2, w * 2))
         up_2 = ops.ResizeBilinear(size=(h * 4, w * 4))
-        out = self.SPADE1(x[-1],y)
+        out = self.SPADE1(x[-1], y)
         out = up_1(out)
         out = self.SPADE2(out, y)
         out = up_2(out)
         out = self.SPADE3(out, y)
-        out= self.img_conv(out)
+        out = self.img_conv(out)
         out = self.tanh(out)
         return out
-
 
 
 ####################################################################
@@ -347,6 +347,7 @@ class SPADE(nn.Cell):
 
         return out
 
+
 ####################################################################
 # -------------------------- Basic Blocks --------------------------
 ####################################################################
@@ -390,6 +391,7 @@ class ConvNormReLU(nn.Cell):
     def construct(self, x):
         output = self.model(x)
         return output
+
 
 ####################################################################
 # ------------------------- Basic Functions -------------------------

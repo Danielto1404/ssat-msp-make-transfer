@@ -1,26 +1,29 @@
 """SSAT train dataset."""
 
-import os
-import cv2
 import copy
+import os
 import random
+
+import cv2
+import mindspore.dataset as ds
 import numpy as np
 from PIL import Image
-import mindspore.dataset as ds
+
 
 def create_dataset(opts):
     """"create SSAT dataset"""
-    if opts.phase=='train':
+    if opts.phase == 'train':
         dataset = MakeupDataset(opts)
-        DS = ds.GeneratorDataset(dataset, column_names=['non_makeup', 'makeup', 'transfer', 'removal', 'non_makeup_parse',
-                                                        'makeup_parse'],
+        DS = ds.GeneratorDataset(dataset,
+                                 column_names=['non_makeup', 'makeup', 'transfer', 'removal', 'non_makeup_parse',
+                                               'makeup_parse'],
                                  shuffle=True, num_parallel_workers=opts.nThreads)
         DS = DS.batch(opts.batch_size)
         return DS
     else:
         dataset = MakeupDataset(opts)
         DS = ds.GeneratorDataset(dataset,
-                                 column_names=['non_makeup', 'makeup', 'non_makeup_parse','makeup_parse'],
+                                 column_names=['non_makeup', 'makeup', 'non_makeup_parse', 'makeup_parse'],
                                  shuffle=False, num_parallel_workers=opts.nThreads)
         DS = DS.batch(1)
         return DS
@@ -28,10 +31,11 @@ def create_dataset(opts):
 
 class MakeupDataset:
     """import dataset"""
+
     def __init__(self, opts):
         """init"""
         self.opt = opts
-        self.phase=opts.phase
+        self.phase = opts.phase
         self.dataroot = opts.dataroot
         self.semantic_dim = opts.semantic_dim
 
@@ -47,11 +51,11 @@ class MakeupDataset:
 
         self.non_makeup_size = len(self.non_makeup_path)
         self.makeup_size = len(self.makeup_path)
-        print('non_makeup size:', self.non_makeup_size,'makeup size:', self.makeup_size)
-        if self.phase=='train':
+        print('non_makeup size:', self.non_makeup_size, 'makeup size:', self.makeup_size)
+        if self.phase == 'train':
             self.dataset_size = self.non_makeup_size
         else:
-            self.dataset_size = self.non_makeup_size*self.makeup_size
+            self.dataset_size = self.non_makeup_size * self.makeup_size
 
     def load_img(self, img_path, angle=0):
         img = cv2.imread(img_path)
@@ -69,14 +73,15 @@ class MakeupDataset:
         result = np.array(result)
         return result
 
-    def rotate(self, img, angle):
+    @staticmethod
+    def rotate(img, angle):
         img = Image.fromarray(img)
         img = img.rotate(angle)
         img = np.array(img)
         return img
 
     def __getitem__(self, index):
-        if self.phase=='train':
+        if self.phase == 'train':
             if np.random.random() > 0.5:
                 non_makeup_angle = np.random.randint(0, 60) - 30
                 makeup_angle = np.random.randint(0, 60) - 30
@@ -129,7 +134,7 @@ class MakeupDataset:
             makeup_parse = np.transpose(makeup_parse, (2, 0, 1)).astype(np.float32)
             non_makeup_parse = np.clip(non_makeup_parse, a_min=0, a_max=1).astype(np.float32)
             makeup_parse = np.clip(makeup_parse, a_min=0, a_max=1).astype(np.float32)
-            return non_makeup_img,makeup_img,transfer_img,removal_img,non_makeup_parse,makeup_parse
+            return non_makeup_img, makeup_img, transfer_img, removal_img, non_makeup_parse, makeup_parse
         else:
             non_makeup_index = index // self.makeup_size
             makeup_index = index % self.makeup_size
@@ -145,7 +150,6 @@ class MakeupDataset:
             makeup_img = self.load_img(self.makeup_path[makeup_index])
             makeup_mask = self.load_img(self.makeup_path[makeup_index].replace('images', 'seg1'))
             makeup_parse = self.load_parse(self.makeup_path[makeup_index].replace('images', 'seg1'))
-
 
             # preprocessing
             data = self.preprocessing(opts=self.opt, non_makeup_img=non_makeup_img, makeup_img=makeup_img,
@@ -166,11 +170,11 @@ class MakeupDataset:
             makeup_parse = np.clip(makeup_parse, a_min=0, a_max=1).astype(np.float32)
             return non_makeup_img, makeup_img, non_makeup_parse, makeup_parse
 
-
     def __len__(self):
         return self.dataset_size
 
-    def expand_mask(self, mask):
+    @staticmethod
+    def expand_mask(mask):
         mask = np.expand_dims(mask, axis=2)
         mask = np.concatenate((mask, mask, mask), axis=2)
         return mask
@@ -193,8 +197,8 @@ class MakeupDataset:
         makeup_parse = cv2.resize(makeup_parse, (opts.resize_size, opts.resize_size),
                                   interpolation=cv2.INTER_NEAREST)
 
-        transfer_img = self.get_groundtrue(transfer_img, non_makeup_mask, transfer_img, non_makeup_mask)
-        removal_img = self.get_groundtrue(removal_img, makeup_mask, removal_img, makeup_mask)
+        transfer_img = self.get_ground_truth(transfer_img, non_makeup_mask, transfer_img, non_makeup_mask)
+        removal_img = self.get_ground_truth(removal_img, makeup_mask, removal_img, makeup_mask)
 
         if np.random.random() > 0.5:
             h1 = int(np.ceil(np.random.uniform(1e-2, opts.resize_size - opts.crop_size)))
@@ -234,7 +238,7 @@ class MakeupDataset:
                 'non_makeup_parse': non_makeup_parse, 'makeup_parse': makeup_parse}
         return data
 
-    def get_groundtrue(self, source_img, source_mask, reference_img, reference_mask):
+    def get_ground_truth(self, source_img, source_mask, reference_img, reference_mask):
         source_mask_neck = self.get_neck_ear_mask(copy.copy(source_mask))
 
         reference_mask_neck = self.get_face_mask(copy.copy(reference_mask))
@@ -253,7 +257,8 @@ class MakeupDataset:
         return source_img
 
     # get neck and ear mask
-    def get_neck_ear_mask(self, mask):
+    @staticmethod
+    def get_neck_ear_mask(mask):
         mask[np.where(mask == 1)] = 0
         mask[np.where(mask == 14)] = 1
         mask[np.where(mask == 8)] = 1
@@ -262,14 +267,16 @@ class MakeupDataset:
         return mask
 
     # get face mask
-    def get_face_mask(self, mask):
+    @staticmethod
+    def get_face_mask(mask):
         mask[np.where(mask != 1)] = 0
         # temp = np.zeros_like(mask)
         # temp[np.where(mask != 1)] = 0
         return mask
 
     # 直方图匹配
-    def hist_match_func(self, source, reference):
+    @staticmethod
+    def hist_match_func(source, reference):
         """
         Adjust the pixel values of images such that its histogram
         matches that of a target image
@@ -330,18 +337,16 @@ if __name__ == '__main__':
 
     parser = MakeupOptions()
     opts = parser.parse()
-    data=create_traindataset(opts)
+    data = create_traindataset(opts)
     data_iter = next(data.create_dict_iterator(output_numpy=True, num_epochs=1))
-    non_makeup=data_iter['non_makeup']
-    makeup=data_iter['makeup']
-    transfer=data_iter['transfer']
-    removal=data_iter['removal']
-    non_makeup_parse=data_iter['non_makeup_parse']
-    makeup_parse=data_iter['makeup_parse']
-    non_makeup=non_makeup[0]
+    non_makeup = data_iter['non_makeup']
+    makeup = data_iter['makeup']
+    transfer = data_iter['transfer']
+    removal = data_iter['removal']
+    non_makeup_parse = data_iter['non_makeup_parse']
+    makeup_parse = data_iter['makeup_parse']
+    non_makeup = non_makeup[0]
     print(non_makeup.shape)
     non_makeup = np.transpose(non_makeup, (1, 2, 0))
-    non_makeup=(non_makeup+1.)*127.5
-    cv2.imwrite('non_makeup.jpg',img=non_makeup)
-
-
+    non_makeup = (non_makeup + 1.) * 127.5
+    cv2.imwrite('non_makeup.jpg', img=non_makeup)

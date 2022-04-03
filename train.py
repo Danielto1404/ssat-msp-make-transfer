@@ -17,15 +17,12 @@
 import os
 import mindspore.nn as nn
 from reporter import Reporter
-from mindspore.context import ParallelMode
 from option import get_opts
 from mindspore import context
 from tools import get_lr
 from dataset import create_dataset
-from mindspore.communication.management import init, get_rank
 from loss import SAATDLoss, SAATGLoss
 from model import get_generator, get_dis_non_makeup, get_dis_makeup, TrainOneStepG, TrainOneStepD
-import time
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -69,7 +66,6 @@ def train():
         reporter.epoch_start()
 
         for data in data_loader:
-
             non_makeup = data['non_makeup']
             makeup = data['makeup']
             transfer_g = data['transfer']
@@ -77,7 +73,8 @@ def train():
             non_makeup_parse = data['non_makeup_parse']
             makeup_parse = data['makeup_parse']
             # print('non_makeup size:',non_makeup.shape)
-            g_loss,z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY = train_G.construct(non_makeup, makeup, transfer_g, removal_g, non_makeup_parse, makeup_parse)
+            g_loss, z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY = train_G.construct(
+                non_makeup, makeup, transfer_g, removal_g, non_makeup_parse, makeup_parse)
             # z_transfer, z_removal, z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup, mapX, mapY = G.construct(
             #     non_makeup, makeup, transfer_g, removal_g, non_makeup_parse, makeup_parse)
             d_loss = train_D(non_makeup, makeup, z_transfer, z_removal)

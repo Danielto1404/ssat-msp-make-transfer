@@ -15,7 +15,6 @@
 
 """Utils for SSAT."""
 
-import random
 import numpy as np
 from PIL import Image
 from mindspore import Tensor
@@ -64,4 +63,3 @@ def load_ckpt(args, G):
     """Load parameter from checkpoint."""
     param_GA = load_checkpoint(args.resume)
     load_param_into_net(G, param_GA)
-

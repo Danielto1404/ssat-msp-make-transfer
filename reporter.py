@@ -19,8 +19,10 @@ import logging
 import os
 import time
 from datetime import datetime
-from mindspore.train.serialization import save_checkpoint
+
 import mindspore.ops as ops
+from mindspore.train.serialization import save_checkpoint
+
 from tools import save_image
 
 
@@ -30,6 +32,7 @@ class Reporter(logging.Logger):
     Args:
         args (class): Option class.
     """
+
     def __init__(self, args):
         super(Reporter, self).__init__("SSAT")
         self.log_dir = os.path.join(args.outputs_dir, 'log')
@@ -93,7 +96,7 @@ class Reporter(logging.Logger):
         self.D_loss.append(loss_D)
         if self.step % self.print_iter == 0:
             step_cost = (time.time() - self.step_start_time) * 1000 / self.print_iter
-            losses = "G_loss: {:.2f}, D_loss:{:.2f}".format( loss_G, loss_D)
+            losses = "G_loss: {:.2f}, D_loss:{:.2f}".format(loss_G, loss_D)
             self.info("Epoch[{}] [{}/{}] step cost: {:.2f} ms, {}".format(
                 self.epoch, self.step, self.dataset_size, step_cost, losses))
             self.step_start_time = time.time()
@@ -112,15 +115,15 @@ class Reporter(logging.Logger):
             # save_checkpoint(net.G.dis_non_makeup, os.path.join(self.ckpts_dir, f"SSAT_D_non_makeup_{self.epoch}.ckpt"))
             # save_checkpoint(net.G.dis_makeup, os.path.join(self.ckpts_dir, f"SSAT_D_makeup_{self.epoch}.ckpt"))
 
-    def visualizer(self, non_makeup, makeup, mapX, mapY, z_transfer,z_removal,transfer_g,removal_g,
-                   z_rec_non_makeup,z_rec_makeup,  z_cycle_non_makeup,z_cycle_makeup):
+    def visualizer(self, non_makeup, makeup, mapX, mapY, z_transfer, z_removal, transfer_g, removal_g,
+                   z_rec_non_makeup, z_rec_makeup, z_cycle_non_makeup, z_cycle_makeup):
         if self.save_imgs and self.step % self.dataset_size == 0:
-            _,C,H,W=non_makeup.shape
-            concat_2=ops.Concat(axis=2)
+            _, C, H, W = non_makeup.shape
+            concat_2 = ops.Concat(axis=2)
             concat_3 = ops.Concat(axis=3)
             bmm = ops.BatchMatMul()
-            nearest_256=ops.ResizeNearestNeighbor((H,W))
-            nearest_64 = ops.ResizeNearestNeighbor((H//4, W//4))
+            nearest_256 = ops.ResizeNearestNeighbor((H, W))
+            nearest_64 = ops.ResizeNearestNeighbor((H // 4, W // 4))
 
             non_makeup_down = nearest_64(non_makeup)
             n, c, h, w = non_makeup_down.shape
@@ -134,9 +137,9 @@ class Reporter(logging.Logger):
             makeup_down_warp = makeup_down_warp.reshape(n, c, h, w)
             makeup_warp = nearest_256(makeup_down_warp)
 
-            row_1=concat_3((non_makeup,makeup_warp,transfer_g,z_transfer,z_rec_non_makeup,z_cycle_non_makeup))
+            row_1 = concat_3((non_makeup, makeup_warp, transfer_g, z_transfer, z_rec_non_makeup, z_cycle_non_makeup))
             row_2 = concat_3((makeup, non_makeup_warp, removal_g, z_removal, z_rec_makeup, z_cycle_makeup))
-            result=concat_2((row_1,row_2))
+            result = concat_2((row_1, row_2))
             save_image(result, os.path.join(self.imgs_dir, f"{self.epoch}_result.jpg"))
 
     def start_predict(self, direction):

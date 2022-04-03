@@ -1,13 +1,15 @@
 import argparse
 
+
 def get_opts():
     parser = MakeupOptions()
     opts = parser.parse()
     return opts
 
+
 class MakeupOptions():
     def __init__(self):
-        self.parser=argparse.ArgumentParser()
+        self.parser = argparse.ArgumentParser()
         # data loader related
         self.parser.add_argument('--dataroot', type=str, default='../../makeup_datasets/images/', help='path of data')
         # self.parser.add_argument('--dataroot', type=str, default='./test_front/images/', help='path of data')
@@ -30,11 +32,12 @@ class MakeupOptions():
 
         # ouptput related
         self.parser.add_argument('--name', type=str, default='SSAT', help='folder name to save outputs')
-        self.parser.add_argument('--outputs_dir', type=str, default='./outputs', help='models are saved here, default is ./outputs.')
+        self.parser.add_argument('--outputs_dir', type=str, default='./outputs',
+                                 help='models are saved here, default is ./outputs.')
         self.parser.add_argument('--print_iter', type=int, default=100, help='log print iter, default is 100.')
-        self.parser.add_argument('--save_imgs', type=bool, default=True, help='whether save imgs when epoch end')
-        self.parser.add_argument('--save_checkpoint_epochs', type=int, default=100, help='save_checkpoint_epochs, default is 100.')
-
+        self.parser.add_argument('--save_imgs', type=bool, default=True, help='whether save images when epoch end')
+        self.parser.add_argument('--save_checkpoint_epochs', type=int, default=100,
+                                 help='save_checkpoint_epochs, default is 100.')
 
         # weight
         self.parser.add_argument('--gan_mode', type=str, default='lsgan', help='gan_mode')
@@ -55,20 +58,20 @@ class MakeupOptions():
         self.parser.add_argument('--dis_scale', type=int, default=3, help='scale of discriminator')
         self.parser.add_argument('--dis_norm', type=str, default='None',
                                  help='normalization layer in discriminator [None, Instance]')
-        self.parser.add_argument('--dis_spectral_norm', type=bool,default=True,
+        self.parser.add_argument('--dis_spectral_norm', type=bool, default=True,
                                  help='use spectral normalization in discriminator')
         self.parser.add_argument('--lr_policy', type=str, default='lambda', help='type of learn rate decay')
 
         self.parser.add_argument('--max_epoch', type=int, default=1000, help='epoch size for training, default is 200.')
-        self.parser.add_argument('--n_epochs', type=int, default=500,  help='number of epochs with the initial learning rate, default is 100')
+        self.parser.add_argument('--n_epochs', type=int, default=500,
+                                 help='number of epochs with the initial learning rate, default is 100')
         self.parser.add_argument('--n_epochs_decay', type=int, default=500,
                                  help='n_epochs_decay')
 
         self.parser.add_argument('--resume', type=str, default=None,
                                  help='specified the dir of saved models for resume the training')
-        self.parser.add_argument('--num_residule_block', type=int, default=4, help='num_residule_block')
+        self.parser.add_argument('--num_residual_block', type=int, default=4, help='num_residule_block')
         self.parser.add_argument('--lr', type=float, default=0.0002, help='lr')
-
 
     def parse(self):
         self.opt = self.parser.parse_args()
