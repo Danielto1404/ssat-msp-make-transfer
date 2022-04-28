@@ -100,7 +100,7 @@ class MakeupDataset:
             makeup_mask = self.load_img(self.makeup_path[index_other].replace('images', 'seg1'), makeup_angle)
             makeup_parse = self.load_parse(self.makeup_path[index_other].replace('images', 'seg1'), makeup_angle)
 
-            # load groundtrue
+            # load ground truth
             non_makeup_name = os.path.basename(self.non_makeup_path[index])[:-4]
             makeup_name = os.path.basename(self.makeup_path[index_other])[:-4]
             transfer_name = makeup_name + '_' + non_makeup_name + '.jpg'
